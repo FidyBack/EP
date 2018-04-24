@@ -2,7 +2,7 @@
 """
 Created on Mon Apr 23 18:44:09 2018
 
-@author: Rodrigo e Abel zicas da balada
+@author: Rodrigo e Abel
 
 PAGUEM-NOS
 """
