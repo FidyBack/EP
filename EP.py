@@ -1,17 +1,20 @@
-
 """
 Created on Mon Apr 23 18:44:09 2018
 
-@author: Rodrigo e Abel
+@author: Rodrigo e Abel zicas da balada
 
 PAGUEM-NOS
 """
 # Arquivos
 import json as js 
-with open('estoque.txt','r') as arquivo:
+with open('loja.txt','r') as arquivo:
 	conteudo = arquivo.read()
-	estoque = js.loads(conteudo)
+	lojas = js.loads(conteudo)
 
+loja=0
+while loja not in lojas:
+	loja=input('Qual o nome da loja?')
+estoque=lojas[loja]
 #Repetição
 iniciar = '-1'
 while iniciar != '0':
@@ -104,9 +107,10 @@ Faça sua escolha: ')
 		print('ERRO')
 
 #Transformando em json
-	with open('estoque.txt','w') as arquivo:
-		estoque_js = js.dumps(estoque, sort_keys = True, indent = 4)   
-		conteudo = arquivo.write(estoque_js)
+	lojas[loja]=estoque
+	with open('loja.txt','w') as arquivo:
+		loja_js = js.dumps(lojas, sort_keys = True, indent = 4)
+		conteudo = arquivo.write(loja_js)
 
 #Selecionando 0
 print('Volte Sempre!!!')
