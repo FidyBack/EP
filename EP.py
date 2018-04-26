@@ -5,33 +5,26 @@ Created on Mon Apr 23 18:44:09 2018
 
 PAGUEM-NOS
 """
+
 #Firebase
-from pyrebase import pyrebase
-config = {
-	"apiKey": "AIzaSyBHXcMtYvqjz_jo958_ROP5Jw34LtiYxg4",
-	"authDomain": "nuvem-ep.firebaseapp.com",
-	"databaseURL": "https://nuvem-ep.firebaseio.com",
-	"projectId": "nuvem-ep",
-    "storageBucket": "nuvem-ep.appspot.com",
-    "messagingSenderId": "677414054942"
-};
-firebase = pyrebase.initialize_app(config);
+from firebase import firebase
+fb = firebase.FirebaseApplication("https://nuvem-ep.firebaseio.com/", None)
+estoque = fb.get("/estoque/lojas", None)
 
-# Json
-import json as js 
-with open("loja.txt","r") as arquivo:
-	conteudo = arquivo.read()
-	lojas = js.loads(conteudo)
+#Criando o estoque caso não haja nada no código
+if estoque == None:
+	estoque = {}
 
-#Escolhendo a Loja
-loja = "-1"
-while loja not in lojas:
-	loja = input("Qual o nome da loja?\n")
-	if loja in lojas:
-		break
+#Escolhendo adicionar a Loja
+loja = input("\nDigite o nome da loja: ")
+if loja not in estoque:
+	ask = input("\nLoja não encontrada, deseja adiciona-la?\n1 - Sim\n2 - Não\n")
+	if ask == "1":
+		estoque[loja] = {}
+		print("\nLoja adicionada, entrando no estoque")
 	else:
-		print("\nLoja inválida\n")
-estoque = lojas[loja]
+		print("\nEncerrando...")
+		quit()
 
 #Repetição
 iniciar = "-1"
@@ -49,6 +42,7 @@ while iniciar != "0":
 7 - Imprimir valor total do estoque\n\
 8 - Apagar estoque\n\
 Faça sua escolha: ")
+
 # Se o número 0 for selecionado
 	if iniciar == "0":
 		break
@@ -56,19 +50,22 @@ Faça sua escolha: ")
 # Se o número 1 for selecionado
 	if iniciar == "1":
 		produto_ad = input("\nNome do produto: ")
-		if produto_ad in estoque and estoque[produto_ad] != None:
+		if produto_ad in estoque[loja] and estoque[loja][produto_ad] != None:
 			print("\nProduto já está no estoque")	
 		else:
-			quantia_ad = int(input("Quantidade inicial: "))
+			quantia_ad = (input("Quantidade inicial: "))
+			while quantia_ad.isnumeric() == False:
+				print('ERRO')
+				quantia_ad = (input("Quantidade inicial: "))
 			preco_ad = float(input("Preço Unitário: "))
-			estoque[produto_ad] = {"quantidade":quantia_ad, "preco":preco_ad}
+			estoque[loja][produto_ad] = {"quantidade":int(quantia_ad), "preco":preco_ad}
 			print("\nProduto Adicionado!!!")
 
 # Se o número 2 for selecionado
 	elif iniciar == "2":
 		produto_rm =(input("\nProduto que quer remover: "))
-		if produto_rm in estoque:
-			del estoque[produto_rm]
+		if produto_rm in estoque[loja]:
+			del estoque[loja][produto_rm]
 			print("\nProduto removido com sucesso!!!")
 		else:
 			print("\nEsse produto não se encontra em estoque")
@@ -76,25 +73,25 @@ Faça sua escolha: ")
 # Se o número 3 for selecionado
 	elif iniciar == "3":
 		produto_al = (input("\nProduto que quer alterar: "))
-		if produto_al in estoque:
+		if produto_al in estoque[loja]:
 				quantia_al = int(input("Quantia para alteração: "))
-				valor_atual = estoque[produto_al]["quantidade"]
-				estoque[produto_al]["quantidade"] = valor_atual + quantia_al
+				valor_atual = estoque[loja][produto_al]["quantidade"]
+				estoque[loja][produto_al]["quantidade"] = valor_atual + quantia_al
 				print("\nAlteração feita com sucesso!!!")
 		else:
 			print("\nProduto não encontrado")
 
 # Se o número 4 for selecionado
 	elif iniciar == "4":
-		print("\nEstoque: ",estoque)
+		print("\nEstoque: ",estoque[loja])
 
 #Se o número 5 for selecionado
 	elif iniciar == "5":
 		produto_df = input("\nNome do produto: ")
-		if produto_df in estoque:
+		if produto_df in estoque[loja]:
 			preco_df = float(input("Novo preço do produto: "))
 			if preco_df > 0:
-				estoque[produto_df]["preco"] = preco_df
+				estoque[loja][produto_df]["preco"] = preco_df
 				print("\nPerço alterado com sucesso!!")
 			elif preco_df == 0:
 				print("\nPreco não pode ser zero")
@@ -106,16 +103,16 @@ Faça sua escolha: ")
 #Se o número 6 for selecionado
 	elif iniciar == "6":
 		negativos = []
-		for e in estoque:
-			if estoque[e]["quantidade"] < 0:
+		for e in estoque[loja]:
+			if estoque[loja][e]["quantidade"] < 0:
 				negativos.append(e)
 		print("\nProdutos em falta: ",negativos)
 
 #Se o número 7 for selecionado
 	elif iniciar == "7":
 		soma = 0
-		for e in estoque:
-			soma += (estoque[e]["quantidade"]*estoque[e]["preco"])
+		for e in estoque[loja]:
+			soma += (estoque[loja][e]["quantidade"]*estoque[loja][e]["preco"])
 		print("\nValor total em estoque: {0} R$".format(soma))
 
 #Se o número 8 for selecionado
@@ -131,10 +128,7 @@ Faça sua escolha: ")
 		print("\nOpção Inválida")
 
 #Transformando em json
-	lojas[loja] = estoque
-	with open("loja.txt","w") as arquivo:
-		loja_js = js.dumps(lojas, sort_keys = True, indent = 4)
-		conteudo = arquivo.write(loja_js)
+	loja_fb = fb.patch("/estoque/lojas", estoque)
 
 #Selecionando 0
 print("\nVolte Sempre!!!")
