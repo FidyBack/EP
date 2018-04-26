@@ -16,15 +16,16 @@ if estoque == None:
 	estoque = {}
 
 #Escolhendo adicionar a Loja
-loja = input("\nDigite o nome da loja: ")
-if loja not in estoque:
-	ask = input("\nLoja não encontrada, deseja adiciona-la?\n1 - Sim\n2 - Não\n")
-	if ask == "1":
-		estoque[loja] = {}
-		print("\nLoja adicionada, entrando no estoque")
-	else:
-		print("\nEncerrando...")
-		quit()
+loja = "-1"
+while loja not in estoque:
+	loja = input("\nDigite o nome da loja: ")
+	if loja not in estoque:
+		ask = input("\nLoja não encontrada, deseja adiciona-la?\n1 - Sim\n2 - Não\n")
+		if ask == "1":
+			estoque[loja] = {}
+			print("\nLoja adicionada, entrando no estoque")
+		else:
+			print("\nvoltando para a escolha da loja")
 
 #Repetição
 iniciar = "-1"
