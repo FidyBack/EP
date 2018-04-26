@@ -5,14 +5,26 @@ Created on Mon Apr 23 18:44:09 2018
 
 PAGUEM-NOS
 """
-# Arquivos
+#Firebase
+from pyrebase import pyrebase
+config = {
+	"apiKey": "AIzaSyBHXcMtYvqjz_jo958_ROP5Jw34LtiYxg4",
+	"authDomain": "nuvem-ep.firebaseapp.com",
+	"databaseURL": "https://nuvem-ep.firebaseio.com",
+	"projectId": "nuvem-ep",
+    "storageBucket": "nuvem-ep.appspot.com",
+    "messagingSenderId": "677414054942"
+};
+firebase = pyrebase.initialize_app(config);
+
+# Json
 import json as js 
 with open("loja.txt","r") as arquivo:
 	conteudo = arquivo.read()
 	lojas = js.loads(conteudo)
 
 #Escolhendo a Loja
-loja = 0
+loja = "-1"
 while loja not in lojas:
 	loja = input("Qual o nome da loja?\n")
 	if loja in lojas:
@@ -119,7 +131,7 @@ Faça sua escolha: ")
 		print("\nOpção Inválida")
 
 #Transformando em json
-	lojas[loja]=estoque
+	lojas[loja] = estoque
 	with open("loja.txt","w") as arquivo:
 		loja_js = js.dumps(lojas, sort_keys = True, indent = 4)
 		conteudo = arquivo.write(loja_js)
