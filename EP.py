@@ -130,7 +130,7 @@ Faça sua escolha: ")
 	else:
 		print("\nOpção Inválida")
 
-#Transformando em json
+#Transformando em firebase
 	loja_fb = fb.patch("/estoque/lojas", estoque)
 
 #Selecionando 0
