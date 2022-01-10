@@ -7,108 +7,143 @@ from firebase import firebase
 import tkinter as tk
 from tkinter import ttk
 
+
 # Firebase initialization
 fb = firebase.FirebaseApplication("https://nuvem-ep.firebaseio.com/", None)
-estoque = fb.get("/estoque/lojas", None)
+stores = fb.get("/stores", None)
 
-# Window's Classes
+
+# Main class
 class MainApp(tk.Tk):
 	def __init__(self):
 		super().__init__()
-		self.geometry("400x300")
-		self.actual_frame = None
+
+		self.geometry("800x600")
 		self.shared_data = {
-			"store_name": None
+			"store_name": tk.StringVar()
 		}
 
 		# Initialize a model the with be used by the frames
 		model = tk.Frame(self)
 		model.pack(fill=tk.BOTH, expand=True)
-		model.rowconfigure(0, weight=1, minsize=150)
-		model.columnconfigure(0, weight=1, minsize=300)
+		model.rowconfigure(0, weight=1)
+		model.columnconfigure(0, weight=1)
 
 		# Put the frames in a dictionary
 		self.frames = {}
-		for F in (InitialWindow, ConfirmationWindow):
+		for F in (InitialWindow, ConfirmationWindow, MenuWindow):
 			frame = F(model, self)
 			self.frames[F] = frame
+			frame.grid(row=0, column=0, sticky="nsew")
+			frame.rowconfigure(0, weight=1)
+			frame.columnconfigure(0, weight=1)
 
 		self.show_frame(InitialWindow)
 
 	# Function to change Frame
 	def show_frame(self, class_name):
-		if self.actual_frame is not None:
-			self.actual_frame.grid_forget()
-		self.actual_frame = self.frames[class_name]
-		self.actual_frame.grid(row = 0, column = 0)
+		frame = self.frames[class_name]
+		frame.tkraise()
+
+	# Change frame and set the name of the store in the variable
+	def store_consult(self, store_name):
+		self.shared_data["store_name"].set(store_name)
+		
+		if store_name not in stores:
+			self.show_frame(ConfirmationWindow)
+		else:
+			self.show_frame(MenuWindow)
+
+	# Change frame and add store to firebase
+	def add_store(self, store_name):
+		stores[store_name] = 00
+		fb.patch("/stores", stores)
+		self.show_frame(MenuWindow)
 
 
-	def store_consult(self, store_name, class_name):
-		self.show_frame(class_name)
-		self.shared_data["store_name"] = store_name
-
-
+# First window class
 class InitialWindow(tk.Frame):
 	def __init__(self, master, controller):
 		tk.Frame.__init__(self, master)
+		frm_store = tk.Frame(self)
+		frm_store.grid(row=0, column=0)
 
-		lbl_store = tk.Label(self, text="Digite o nome da Loja")
-		ent_store = tk.Entry(self, width=30)
-		btn_store = tk.Button(self, text="Acessar Loja", command=lambda: controller.store_consult(ent_store.get(), ConfirmationWindow))
+		lbl_store = tk.Label(frm_store, text="Digite o nome da Loja")
+		ent_store = tk.Entry(frm_store, width=30)
+		btn_store = tk.Button(frm_store, text="Acessar Loja", command=lambda: controller.store_consult(ent_store.get()))
 
 		lbl_store.pack(pady=(0,10))
 		ent_store.pack()
 		btn_store.pack(pady=(10,0))
 
+
+# New time store window class
 class ConfirmationWindow(tk.Frame):
 	def __init__(self, master, controller):
 		tk.Frame.__init__(self, master)
-		lbl_menu = tk.Label(self, text="Success")
-		btn_menu = tk.Button(self, text="Acessar Loja", command=lambda: controller.show_frame(InitialWindow))
+		frm_conf = tk.Frame(self)
+		frm_conf.grid(row=0, column=0)
+		
+		lbl_conf = tk.Label(frm_conf, text="Essa loja não está registada, deseja adicioná-la?")
+		lbl_conf.pack()
+		
+		frm_buttons = tk.Frame(frm_conf)
+		btn_foward = tk.Button(frm_buttons, text="Sim", width=10, command=lambda: controller.add_store(controller.shared_data["store_name"].get()))
+		btn_back = tk.Button(frm_buttons, text="Não", width=10, command=lambda: controller.show_frame(InitialWindow))
 
-		lbl_menu.pack()
-		btn_menu.pack()
+		frm_buttons.pack()
+		btn_foward.grid(row=0, column=0, sticky="e")
+		btn_back.grid(row=0, column=1, sticky="w")
 
-# root = tk.Tk()
 
-# frm_loja = tk.Frame(root)
-# frm_loja.grid(row=0, column=0)
+# Menu window class
+class MenuWindow(tk.Frame):
+	def __init__(self, master, controller):
+		tk.Frame.__init__(self, master)
+		
+		lbl_menu = tk.Label(self, textvariable=controller.shared_data["store_name"])
+		lbl_menu.grid(sticky="n")
 
-# lbl_loja = tk.Label(frm_loja, text="Digite o nome da Loja")
-# ent_loja = tk.Entry(frm_loja, width=30)
-# btn_acesso = tk.Button(frm_loja, text="Acessar Loja", command=add_store)
+		frm_menu = tk.Frame(self)
+		frm_menu.grid(row=0, column=0)
 
-# lbl_loja.pack(pady=(0,10))
-# ent_loja.pack()
-# btn_acesso.pack(pady=(10,0))
+		lbl_estoque = tk.Label(frm_menu, text="Controle de Estoque")
+		lbl_estoque.pack()
 
+		frm_buttons = tk.Frame(frm_menu)
+
+		btn_add = tk.Button(frm_buttons, text="Adicionar item", width=25, height=2 )
+		btn_remove = tk.Button(frm_buttons, text="Remover item", width=25, height=2 )
+		btn_change_quant = tk.Button(frm_buttons, text="Alterar quantidade do item", width=25, height=2 )
+		btn_print_all = tk.Button(frm_buttons, text="Imprimir estoque", width=25, height=2 )
+		btn_change_price = tk.Button(frm_buttons, text="Alterar preço unitário", width=25, height=2 )
+		btn_print_negative = tk.Button(frm_buttons, text="Imprimir produtos com \nquantidades negativas", width=25, height=2 )
+		btn_print_value = tk.Button(frm_buttons, text="Imprimir valor total do estoque", width=25, height=2 )
+		btn_del = tk.Button(frm_buttons, text="Apagar estoque", width=25, height=2 )
+		btn_back = tk.Button(frm_buttons, text="Voltar", width=25, height=2, command=lambda: controller.show_frame(InitialWindow) )
+		
+		
+		frm_buttons.pack()
+		btn_add.grid(row=0, column=0)
+		btn_remove.grid(row=0, column=1)
+		btn_change_quant.grid(row=1, column=0)
+		btn_print_all.grid(row=1, column=1)
+		btn_change_price.grid(row=2, column=0)
+		btn_print_negative.grid(row=2, column=1)
+		btn_print_value.grid(row=3, column=0)
+		btn_del.grid(row=3, column=1)
+		btn_back.grid(row=4, columnspan=2)
 
 
 if __name__ == "__main__":
+	# Create if dosen't exist
+	if not stores:
+		stores = {}
+	
 	app = MainApp()
 	app.mainloop()
 
-#Criando o estoque caso não haja nada no código
-# if estoque == None:
-# 	estoque = {}
 
-# #Escolhendo adicionar a Loja
-# loja = "-1"
-# while loja not in estoque:
-# 	loja = input("\nDigite o nome da loja: ")
-# 	if loja not in estoque:
-# 		ask = input("\nLoja não encontrada, deseja adiciona-la?\n1 - Sim\n2 - Não\n")
-# 		if ask == "1":
-# 			estoque[loja] = {}
-# 			print("\nPara adicionar essa loja ao sistema, insira um produto")
-# 		elif ask == "2":
-# 			print("\nLoja rejeitada")
-# 		else:
-# 			print("\nEscolha uma opção válida")
-
-# #Repetição
-# iniciar = "-1"
-# while iniciar != "0":
 
 # # Menu Inicial
 # 	iniciar = input("\nControle de estoque\n\
